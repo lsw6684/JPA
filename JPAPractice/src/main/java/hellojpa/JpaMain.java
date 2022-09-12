@@ -16,17 +16,16 @@ public class JpaMain {
         tx.begin();
 
         try {
-            //비영속
-            Member member = new Member();
-            member.setId(101L);
-            member.setName("HelloJPA");
-
             //영속
-            em.persist(member); // 1차 캐시에 저장했기 때문에 하위에서 조회해도 쿼리 x
-            
+            Member member1 = new Member(150L, "A");
+            Member member2 = new Member(160L, "b");
 
-            Member findMember = em.find(Member.class, 101L);
+            em.persist(member1);
+            em.persist(member2);
 
+            System.out.println("===============");
+
+            tx.commit();
 
         } catch (Exception e) {
             tx.rollback();

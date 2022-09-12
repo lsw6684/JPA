@@ -63,14 +63,14 @@ JPA를 사용하여 엔티티 객체를 중심으로 개발하는 쿼리로 SQL�
 ### 엔티티의 생명주기
 - 비영속(new/transient) : 영속성 컨텍스트와 전혀 관계 없는 새로운 상태
     ```java
-    // 객체 생성
+    // 객체 생성(비영속)
     Member member = new Member();
     member.setId("member1");
     member.setUsername("회원1");
     ```
 - 영속(managed) : 영속성 컨텍스트에 관리되는 상태
     ```java
-    // 객체 생성
+    // 객체 생성(비영속)
     Member member = new Member();
     member.setId("member1");
     member.setUsername("회원1");
@@ -88,16 +88,55 @@ JPA를 사용하여 엔티티 객체를 중심으로 개발하는 쿼리로 SQL�
 
 ### 영속성 컨텍스트의 이점
 - 1차 캐시
-    - `persist()` 혹은 최초 쿼리 발생 시 저장.
-    - 영속 엔티티의 동일성 보장.
-        - 1차 캐시로 반복 가능한 읽기(REPEATABLE READ)등급의 트랜잭션 격리 수준을, 데이터베이스가 아닌 애플리케이션 차원에서 제공합니다.
-            ```java
-            Member a = em.find(Member.class, "member1");
-            Member b = em.find(Member.clase, "member1");
+    - `persist()` 혹은 최초 쿼리 발생 시 저장?
 
-            System.out.println(a == b); // true
-            ```
 - 동일성(identity) 보장
+    - 1차 캐시로 반복 가능한 읽기(REPEATABLE READ)등급의 트랜잭션 격리 수준을, 데이터베이스가 아닌 애플리케이션 차원에서 제공합니다.
+        ```java
+        Member a = em.find(Member.class, "member1");
+        Member b = em.find(Member.clase, "member1");
+
+        System.out.println(a == b); // true
+        ```
 - 트랜잭션을 지원하는 쓰기 지연(transactional write-behind)
+    ```java
+    EntityManager em = emf.createEntityManager();
+    EntityTransaction transaction = em.getTransaction();
+    // 엔티티 매니저는 데이터 변경 시 트랜잭션을 시작해야 합니다.
+    transaction.begin();
+
+    em.persist(memberA);
+    em.persist(memberB);
+    // 여기까진 SQL을 보내지 않습니다. 
+
+    transaction.commit();   // 트랜잭션 커밋, 커밋하는 순간 DB에 INSERT SQL 전송
+    // hibernate 설정으로 size조절 가능 >> 버퍼링
+    ```
+    - 쓰기 지연 SQL 저장소가 존재하여, `persist()` 사용 시 쿼리가 삽입됩니다.
+    - `transaction.commit()` 시 쓰기 지연 SQL에 쌓인 쿼리들이 전송됩니다. 이 것을 `flush()`라고 합니다.
 - 변경 감지(Dirty Checking)
+    ```java
+    EntityManager em = emf.createEntityManager();
+    EntityTransaction transaction = em.getTransaction();
+    transaction.begin();
+
+    // 영속 엔티티 조회
+    Member memberA = em.find(Member.class, "memberA");
+
+    // 영속 엔티티 데이터 수정
+    memberA.setUsername("hi");
+    memberA.setAge(10);
+
+    transaction.commit();
+    ```
+    - `commit()` 시 `flush()`가 발생하는데, 1차 캐시의 Entity와 스냅샷을 비교하여 쓰기 지연 SQL저장소에 쿼리를 만들어 두고 한 번에 전송합니다.
+    - `commit()`직전에만 동기화 하면 됩니다.
+    <p align="center"><img src="images/변경감지.png" width="70%"></p>
+
+    - `flush()` : 영속성 컨텍스트의 변경내용(쓰기 지연 SQL 저장소의 쿼리들)을 데이터베이스에 반영합니다. ***1차 캐시, 영속성 컨텍스트를 비우는 것이 아님***
+        - flush() 방법 종류
+            - `em.flush()` - 직접(강제) 호출
+            - 트랜잭션 커밋 - 플러시 자동 호출
+            - JPQL 쿼리 실행 - 플러시 자동 호출
+ 
 - 지연 로딩(Lazy Loading)
