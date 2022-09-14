@@ -198,3 +198,20 @@ JPA를 사용하여 엔티티 객체를 중심으로 개발하는 쿼리로 SQL�
         - `@Column(unique = true, length = 10)`
     - 유니크 제약조건 추가
         - `@Table(uniqueConstraints = {UniqueConstraint(name = "NAME_AGE_UNIQUE", columnNames={"NAME", "AGE"})}`
+
+### 필드와 컬럼 매핑
+|어노테이션|설명|
+|:---|:---|
+|`@Column`|컬럼 매핑|
+|`@Temporal`|날짜 타입 매핑|
+|`@Enumerated`|enum 타입 매핑|
+|`@Lob`|BLOB, CLOB 매핑|
+|`@Transient`|특정 필드를 컬럼에 매핑하지 않음(매핑 무시)|
+
+#### `@Enumerated`
+- EnumType.ORDINAL : enum 순서를 데이터베이스에 저장합니다. **기본값이지만 컬럼 추가, 혹은 순서가 변경 된다면, 예기치 못한 문제가 발생할 수 있으니 지양합니다.** 
+- EnumType.STRING : enum 이름을 데이터베이스에 저장합니다.  **문자열 자체가 저장되기 때문에 DB 공간 낭비가 발생합니다.**
+    - DB공간을 조금 낭비하더라도 STRING을 쓰는 게 안전합니다.
+
+### `@Temporal`
+
