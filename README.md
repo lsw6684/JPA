@@ -92,7 +92,7 @@ JPA를 사용하여 엔티티 객체를 중심으로 개발하는 쿼리로 SQL�
     member.setName("AAAA"); // Dirty Checking
 
     // 더 이상 영속성 컨텍스트로 관리하기 싫으면
-    em.detach();    // 이 것이 준영속
+    em.detach(member);    // 이 것이 준영속
     ```
     - `entityManager.detach()` : 특정 엔티티만 준영속 상태로 전환
     - `entityManager.clear()` : 영속성 컨텍스트를 완전히 초기화
